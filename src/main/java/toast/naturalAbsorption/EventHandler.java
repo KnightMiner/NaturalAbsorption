@@ -3,10 +3,12 @@ package toast.naturalAbsorption;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.MobEffects;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
@@ -173,6 +175,11 @@ public class EventHandler {
                     	player.setHeldItem(EnumHand.MAIN_HAND, ItemStack.EMPTY);
                     }
                 }
+                player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, 1f, 1f);
+            } else {
+            	player.sendStatusMessage(new TextComponentTranslation("message.absorption_book.not_enough_levels", new Object[] {
+            			cost
+				}), true);
             }
         }
     }

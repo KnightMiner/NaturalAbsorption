@@ -163,6 +163,12 @@ public class Properties {
         	"The number of ticks between shield recovery updates. (20 ticks = 1 second)",
 			PropertyCategory.RINT_POS1);
 
+        public final boolean REQUIRE_HUNGER = this.prop("require_hunger", false,
+        	"If true the absorption shield will only refill if the hunger bar is full.");
+
+        public final float EXAUSTION = this.prop("exaustion", 0f,
+        	"Amount of exaustion from refilling the absprtion shield per half heart. For comparison natural regen is 6.0 per half heart");
+
     }
 
 	public final UPGRADES UPGRADES = new UPGRADES();

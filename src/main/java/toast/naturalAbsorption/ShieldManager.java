@@ -179,9 +179,9 @@ public class ShieldManager {
             player.setAbsorptionAmount(shieldCapacity);
         }
         else {
-            float recoveredShield = 0.0F;
             int delayTime = shieldData.getInteger(ShieldManager.DELAY_TAG);
             if (delayTime >= 0) {
+                float recoveredShield = 0.0F;
                 if (delayTime > 0) {
                     if (delayTime <= Properties.get().RECOVERY.UPDATE_TIME) {
                         delayTime = Properties.get().RECOVERY.UPDATE_TIME - delayTime;
@@ -198,13 +198,19 @@ public class ShieldManager {
                     recoveredShield = Properties.get().RECOVERY.RATE * Properties.get().RECOVERY.UPDATE_TIME;
                 }
 
-                if (recoveredShield > 0.0F && currentShield < shieldCapacity) {
+                // if it requires hunger to restore, make sure hunger is 18 or more
+                if (recoveredShield > 0.0F && currentShield < shieldCapacity
+                		&& (!Properties.get().RECOVERY.REQUIRE_HUNGER || player.getFoodStats().getFoodLevel() >= 18)) {
                     recoveredShield += currentShield;
                     if (recoveredShield > shieldCapacity) {
-                        player.setAbsorptionAmount(shieldCapacity);
+                    	recoveredShield = shieldCapacity;
                     }
-                    else {
-                        player.setAbsorptionAmount(recoveredShield);
+                    player.setAbsorptionAmount(recoveredShield);
+                    
+                    // consume hunger if enabled
+                    float exaustion = Properties.get().RECOVERY.EXAUSTION;
+                    if(exaustion > 0) {
+                    	player.addExhaustion(exaustion * (recoveredShield - currentShield));
                     }
                 }
             }

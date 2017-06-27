@@ -26,7 +26,7 @@ public class EnchantmentAbsorption extends Enchantment {
 	// Returns the maximum level that the enchantment can have.
 	@Override
 	public int getMaxLevel() {
-		return 5;
+		return Properties.get().ENCHANT.MAX_LEVEL;
 	}
 
 	@Override

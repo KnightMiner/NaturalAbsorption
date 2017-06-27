@@ -132,7 +132,7 @@ public class ShieldManager {
             bonus += Properties.get().ARMOR.MULTIPLIER * player.getTotalArmorValue();
         }
 
-        if (ModNaturalAbsorption.ABSORB_ENCHANT != null) {
+        if (Properties.get().ENCHANT.ENABLE) {
             int absorbLevel = 0;
             if (Properties.get().ENCHANT.STACKING) {
             	Iterable<ItemStack> equipment = ModNaturalAbsorption.ABSORB_ENCHANT.getEntityEquipment(player);
@@ -241,13 +241,11 @@ public class ShieldManager {
             // Counter for player shield update.
             if (++this.updateCounter >= Properties.get().RECOVERY.UPDATE_TIME) {
                 this.updateCounter = 0;
-                WorldServer[] worlds = FMLCommonHandler.instance().getMinecraftServerInstance().worldServers;
+                WorldServer[] worlds = FMLCommonHandler.instance().getMinecraftServerInstance().worlds;
                 for (WorldServer world : worlds) {
                     if (world != null) {
-                        for (Object entity : new ArrayList(world.playerEntities)) {
-                            if (entity instanceof EntityPlayer) {
-                                ShieldManager.updateShield((EntityPlayer) entity);
-                            }
+                        for (EntityPlayer entity : new ArrayList<EntityPlayer>(world.playerEntities)) {
+                            ShieldManager.updateShield(entity);
                         }
                     }
                 }

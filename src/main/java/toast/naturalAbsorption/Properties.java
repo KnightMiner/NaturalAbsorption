@@ -111,10 +111,8 @@ public class Properties {
 		public final boolean BOOKS = this.prop("books", true,
 			"If false, the Absorption enchantment will not be allowed on books.");
 
-		public final int ID = this.prop("id", 216,
-			"The enchantment id for the Absorption enchantment. Set to 0 to disable the enchantment entirely.\n"
-			+ "This is for savegame data only. The id is \"" + ModNaturalAbsorption.MODID + ":" + "absorption" + "\" for practical purposes.",
-			PropertyCategory.RINT_SRT_POS);
+		public final boolean ENABLE = this.prop("enable", true,
+			"Enables the enchantment");
 
 		public final float POTENCY = this.prop("potency", 4.0F,
 			"Max absorption gained for each rank of the Absorption enchantment.");

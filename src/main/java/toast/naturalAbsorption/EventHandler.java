@@ -10,6 +10,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -25,7 +26,7 @@ public class EventHandler {
 
     // Returns true if the item is this mod's shield upgrade item.
     public static boolean isShieldItem(ItemStack itemStack) {
-        return itemStack != null && itemStack.getItem() == ModNaturalAbsorption.ABSORB_BOOK;
+        return !itemStack.isEmpty() && itemStack.getItem() == ModNaturalAbsorption.ABSORB_BOOK;
     }
 
     public EventHandler() {
@@ -127,13 +128,15 @@ public class EventHandler {
      */
     @SubscribeEvent(priority = EventPriority.NORMAL)
     public void onPlayerInteract(PlayerInteractEvent.RightClickItem event) {
-        ItemStack held = event.getEntityPlayer().getHeldItemMainhand();
-        if (held != null && EventHandler.isShieldItem(held)) {
-            boolean canUse = event.getEntityPlayer().experienceLevel >= Properties.get().UPGRADES.LEVEL_COST || event.getEntityPlayer().capabilities.isCreativeMode;
+    	EntityPlayer player = event.getEntityPlayer();
+        ItemStack held = player.getHeldItemMainhand();
+        if (!held.isEmpty() && EventHandler.isShieldItem(held)) {
+        	int cost = Properties.get().UPGRADES.LEVEL_COST;
+            boolean canUse = player.experienceLevel >= cost || player.capabilities.isCreativeMode;
             if (canUse) {
                 boolean hasEffect = false;
                 if (Properties.get().UPGRADES.ABSORPTION_GAIN > 0.0F) {
-                    NBTTagCompound shieldData = ShieldManager.getShieldData(event.getEntityPlayer());
+                    NBTTagCompound shieldData = ShieldManager.getShieldData(player);
                     float shieldCapacity = ShieldManager.getData(shieldData, ShieldManager.CAPACITY_TAG, Properties.get().GENERAL.STARTING_SHIELD);
                     if (shieldCapacity < Properties.get().GENERAL.MAX_SHIELD) {
                         hasEffect = true;
@@ -154,20 +157,20 @@ public class EventHandler {
                         hasEffect = true;
                         currentShield += Properties.get().UPGRADES.ABSORPTION_GAIN;
                         if (currentShield > shieldCapacity) {
-                            event.getEntityPlayer().setAbsorptionAmount(shieldCapacity);
+                        	player.setAbsorptionAmount(shieldCapacity);
                         }
                         else {
-                            event.getEntityPlayer().setAbsorptionAmount(currentShield);
+                        	player.setAbsorptionAmount(currentShield);
                         }
                     }
                 }
-                if (hasEffect && !event.getEntityPlayer().capabilities.isCreativeMode) {
+                if (hasEffect && !player.capabilities.isCreativeMode) {
                     if (Properties.get().UPGRADES.LEVEL_COST > 0) {
-                        event.getEntityPlayer().addExperienceLevel(-Properties.get().UPGRADES.LEVEL_COST);
+                    	player.addExperienceLevel(-Properties.get().UPGRADES.LEVEL_COST);
                     }
-                    held.stackSize--;
-                    if (held.stackSize <= 0) {
-                        event.getEntityPlayer().setHeldItem(EnumHand.MAIN_HAND, (ItemStack) null);
+                    held.shrink(1);
+                    if (held.getCount() <= 0) {
+                    	player.setHeldItem(EnumHand.MAIN_HAND, ItemStack.EMPTY);
                     }
                 }
             }
@@ -253,9 +256,9 @@ public class EventHandler {
                 }
 
                 if ("HITS".equalsIgnoreCase(Properties.get().ARMOR.DURABILITY_TRIGGER)) {
-                	if (event.getSource() == DamageSource.inWall || event.getSource() == DamageSource.starve || event.getSource() == DamageSource.drown
-                		|| event.getSource() == DamageSource.magic && event.getAmount() <= 1.0F || event.getSource() == DamageSource.wither
-                		|| event.getSource() == DamageSource.onFire || event.getSource() == DamageSource.lava)
+                	if (event.getSource() == DamageSource.IN_WALL || event.getSource() == DamageSource.STARVE || event.getSource() == DamageSource.DROWN
+                		|| event.getSource() == DamageSource.MAGIC && event.getAmount() <= 1.0F || event.getSource() == DamageSource.WITHER
+                		|| event.getSource() == DamageSource.ON_FIRE || event.getSource() == DamageSource.LAVA)
                     	this.damageArmor(event);
                 }
                 else if ("ALL".equalsIgnoreCase(Properties.get().ARMOR.DURABILITY_TRIGGER))

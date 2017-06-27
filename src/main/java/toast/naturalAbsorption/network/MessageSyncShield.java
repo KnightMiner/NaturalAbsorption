@@ -33,17 +33,17 @@ public class MessageSyncShield implements IMessage
 	@Override
 	public void toBytes(ByteBuf bytebuf) {
 		PacketBuffer buf = new PacketBuffer(bytebuf);
-        buf.writeVarIntToBuffer(this.entityId);
+        buf.writeVarInt(this.entityId);
         buf.writeFloat(this.absorption);
-        buf.writeNBTTagCompoundToBuffer(this.shieldData);
+        buf.writeCompoundTag(this.shieldData);
 	}
 	@Override
 	public void fromBytes(ByteBuf bytebuf) {
 		PacketBuffer buf = new PacketBuffer(bytebuf);
-        this.entityId = buf.readVarIntFromBuffer();
+        this.entityId = buf.readVarInt();
         this.absorption = buf.readFloat();
         try {
-			this.shieldData = buf.readNBTTagCompoundFromBuffer();
+			this.shieldData = buf.readCompoundTag();
 		}
 		catch (IOException ex) {
             ModNaturalAbsorption.logError("Failed to read shield data tag from server!");

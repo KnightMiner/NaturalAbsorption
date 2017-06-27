@@ -76,13 +76,7 @@ public class ModNaturalAbsorption {
 
 	// Registers the enchantments in this mod.
 	private void registerEnchantments() {
-		if (Properties.get().ENCHANT.ID > 0) {
-			if (Enchantment.getEnchantmentByID(Properties.get().ENCHANT.ID) != null) {
-				ModNaturalAbsorption.exception("Enchantment id [" + Properties.get().ENCHANT.ID + "] is already taken by "
-					+ Enchantment.REGISTRY.getNameForObject(Enchantment.getEnchantmentByID(Properties.get().ENCHANT.ID))
-					+ "! Please choose another id or disable the absorption enchantment.");
-			}
-
+		if (Properties.get().ENCHANT.ENABLE) {
 			final Enchantment.Rarity rarity;
 			if ("COMMON".equalsIgnoreCase(Properties.get().ENCHANT.RARITY)) {
 				rarity = Enchantment.Rarity.COMMON;
@@ -124,8 +118,7 @@ public class ModNaturalAbsorption {
 
 			EntityEquipmentSlot[] allArmorSlots = { EntityEquipmentSlot.HEAD, EntityEquipmentSlot.CHEST, EntityEquipmentSlot.LEGS, EntityEquipmentSlot.FEET };
 			ModNaturalAbsorption.ABSORB_ENCHANT = new EnchantmentAbsorption(rarity, type, allArmorSlots);
-			Enchantment.REGISTRY.register(Properties.get().ENCHANT.ID,
-				new ResourceLocation(ModNaturalAbsorption.MODID, "absorption"), ModNaturalAbsorption.ABSORB_ENCHANT);
+			GameRegistry.register(ModNaturalAbsorption.ABSORB_ENCHANT, new ResourceLocation(ModNaturalAbsorption.MODID, "absorption"));
 		}
 	}
 

@@ -198,15 +198,15 @@ public class ShieldManager {
                     recoveredShield = Properties.get().RECOVERY.RATE * Properties.get().RECOVERY.UPDATE_TIME;
                 }
 
-                // if it requires hunger to restore, make sure hunger is 18 or more
+                // if it requires hunger to restore, make sure hunger is higher than the requirement
                 if (recoveredShield > 0.0F && currentShield < shieldCapacity
-                		&& (!Properties.get().RECOVERY.REQUIRE_HUNGER || player.getFoodStats().getFoodLevel() >= 18)) {
+                		&& player.getFoodStats().getFoodLevel() >= Properties.get().RECOVERY.REQUIRED_HUNGER) {
                     recoveredShield += currentShield;
                     if (recoveredShield > shieldCapacity) {
                     	recoveredShield = shieldCapacity;
                     }
                     player.setAbsorptionAmount(recoveredShield);
-                    
+
                     // consume hunger if enabled
                     float exaustion = Properties.get().RECOVERY.EXAUSTION;
                     if(exaustion > 0) {

@@ -13,7 +13,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -218,15 +217,9 @@ public class ShieldManager {
     }
 
     // The counter to the next damage source purge.
-    private int cleanupCounter = 0;
+    private static int cleanupCounter = 0;
     // The counter to the next update.
-    private int updateCounter = 0;
-
-    public ShieldManager() {
-        if (Properties.get().RECOVERY.DELAY >= 0) {
-            MinecraftForge.EVENT_BUS.register(this);
-        }
-    }
+    private static int updateCounter = 0;
 
     /**
      * Called each tick.
@@ -237,16 +230,16 @@ public class ShieldManager {
      * @param event The event being triggered.
      */
     @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public void onServerTick(TickEvent.ServerTickEvent event) {
+    public static void onServerTick(TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
             // Counter for damage source cleanup.
-            if (++this.cleanupCounter >= 100) {
-                this.cleanupCounter = 0;
+            if (++cleanupCounter >= 100) {
+                cleanupCounter = 0;
                 ShieldManager.clearSources();
             }
             // Counter for player shield update.
-            if (++this.updateCounter >= Properties.get().RECOVERY.UPDATE_TIME) {
-                this.updateCounter = 0;
+            if (++updateCounter >= Properties.get().RECOVERY.UPDATE_TIME) {
+                updateCounter = 0;
                 WorldServer[] worlds = FMLCommonHandler.instance().getMinecraftServerInstance().worlds;
                 for (WorldServer world : worlds) {
                     if (world != null) {

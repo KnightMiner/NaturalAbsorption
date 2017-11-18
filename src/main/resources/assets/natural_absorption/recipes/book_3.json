@@ -1,0 +1,26 @@
+{
+  "conditions": [
+    {
+      "type": "config",
+      "enabled": "book_recipe_3"
+    }
+  ],
+  "result": {
+    "item": "natural_absorption:absorption_book"
+  },
+  "pattern": [
+    "AAA",
+    "ABA",
+    "AAA"
+  ],
+  "type": "forge:ore_shaped",
+  "key": {
+    "A": {
+      "item": "minecraft:golden_apple",
+      "data": 0
+    },
+    "B": {
+      "item": "minecraft:writable_book"
+    }
+  }
+}

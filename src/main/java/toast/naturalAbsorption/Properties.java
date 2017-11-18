@@ -1,12 +1,16 @@
 package toast.naturalAbsorption;
 
 import java.util.Arrays;
+import java.util.function.BooleanSupplier;
 
-import net.minecraft.init.Items;
-import net.minecraft.item.Item;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
+
+import net.minecraft.util.JsonUtils;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
-import net.minecraftforge.oredict.OreDictionary;
+import net.minecraftforge.common.crafting.IConditionFactory;
+import net.minecraftforge.common.crafting.JsonContext;
 
 /**
  * This helper class loads, stores, and retrieves config options.
@@ -163,7 +167,7 @@ public class Properties {
         	"The number of ticks between shield recovery updates. (20 ticks = 1 second)",
 			PropertyCategory.RINT_POS1);
 
-        public final int REQUIRED_HUNGER = this.prop("require_hunger", 0,
+        public final int REQUIRED_HUNGER = this.prop("required_hunger", 0,
         	"Required hunger level before the absorption bar fills. 18 is the food required for vanilla natural regneration, set to 0 to fill regardless of hunger.", 0, 20);
 
         public final float EXAUSTION = this.prop("exaustion", 0f,
@@ -186,24 +190,13 @@ public class Properties {
 		public final int LEVEL_COST = this.prop("level_cost", 20,
         	"The number of levels required to use a book of absorption.");
 
-        public final int RECIPE = this.prop("recipe", 3,
+        public final int RECIPE = this.prop("recipe", 2,
         	"The recipe for making a book of absorption.\n"
         	+ " 0 - cannot be crafted\n"
-        	+ " 1 - book + item (shapeless)\n"
-        	+ " 2 - book surrounded by 4 items\n"
-        	+ " 3 - book surrounded by 8 items",
+        	+ " 1 - book + golden apple (shapeless)\n"
+        	+ " 2 - book surrounded by 4 golden apple\n"
+        	+ " 3 - book surrounded by 8 golden apple",
         	0, 3);
-
-        public final boolean RECIPE_ALT = this.prop("recipe_alt", true,
-        	"If true, a book and quill will be required to craft a book of absorption instead of a regular book.");
-
-        public final String RECIPE_ITEM = this.prop("recipe_item", Item.REGISTRY.getNameForObject(Items.GOLDEN_APPLE).toString(),
-        	"The item id of the item required in the absorption book recipe.", "mod_id:item_name");
-
-        public final int RECIPE_ITEM_DAMAGE = this.prop("recipe_item_damage", 0,
-        	"The item damage required for the item in the recipe. " + OreDictionary.WILDCARD_VALUE + " will match any damage value.",
-        	PropertyCategory.RINT_SRT_POS);
-
     }
 
 
@@ -399,5 +392,28 @@ public class Properties {
     		}
     		return commentBuilder.substring(0, commentBuilder.length() - 2).toString();
 	    }
+	}
+
+
+	public static class ConditionConfig implements IConditionFactory {
+		@Override
+		public BooleanSupplier parse(JsonContext context, JsonObject json) {
+			String enabled = JsonUtils.getString(json, "enabled");
+			return () -> configEnabled(enabled);
+		}
+
+		// this is just so I am not doing () -> each time really, I'm lazy :)
+		private static boolean configEnabled(String config) {
+			switch(config) {
+				case "book_recipe_1":
+					return INSTANCE.UPGRADES.RECIPE == 1;
+				case "book_recipe_2":
+					return INSTANCE.UPGRADES.RECIPE == 2;
+				case "book_recipe_3":
+					return INSTANCE.UPGRADES.RECIPE == 3;
+			}
+
+			throw new JsonSyntaxException("Config option '" + config + "' does not exist");
+		}
 	}
 }

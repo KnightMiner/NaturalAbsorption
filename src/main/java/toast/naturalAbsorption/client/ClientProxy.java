@@ -1,8 +1,17 @@
 package toast.naturalAbsorption.client;
 
-import net.minecraft.client.Minecraft;
+import javax.annotation.Nonnull;
+
+import net.minecraft.client.renderer.ItemMeshDefinition;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import toast.naturalAbsorption.CommonProxy;
 import toast.naturalAbsorption.ModNaturalAbsorption;
 
@@ -10,16 +19,27 @@ import toast.naturalAbsorption.ModNaturalAbsorption;
 public class ClientProxy extends CommonProxy {
 
 	@Override
-	public void registerRenderers() {
-		ClientProxy.register(ModNaturalAbsorption.ABSORB_BOOK);
+	public void preInit() {
+		MinecraftForge.EVENT_BUS.register(this);
 	}
 
-	public static void register(Item item) {
-		ClientProxy.register(item, 0);
-	}
-	public static void register(Item item, int meta) {
-	    Minecraft.getMinecraft().getRenderItem().getItemModelMesher()
-	    .register(item, meta, new ModelResourceLocation(Item.REGISTRY.getNameForObject(item), "inventory"));
+	@SubscribeEvent
+	public void registerModels(ModelRegistryEvent event) {
+		registerItemModel(ModNaturalAbsorption.ABSORB_BOOK);
 	}
 
+	private void registerItemModel(Item item) {
+		if(item != null && item != Items.AIR) {
+			final ResourceLocation location = item.getRegistryName();
+			// so all meta get the item model
+			ModelLoader.setCustomMeshDefinition(item, new ItemMeshDefinition() {
+				@Nonnull
+				@Override
+				public ModelResourceLocation getModelLocation(@Nonnull ItemStack stack) {
+					return new ModelResourceLocation(location, "inventory");
+				}
+			});
+			ModelLoader.registerItemVariants(item, location);
+		}
+	}
 }

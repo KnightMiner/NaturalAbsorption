@@ -1,0 +1,21 @@
+{
+  "conditions": [
+    {
+      "type": "config",
+      "enabled": "book_recipe_1"
+    }
+  ],
+  "result": {
+    "item": "natural_absorption:absorption_book"
+  },
+  "type": "forge:ore_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:golden_apple",
+      "data": 0
+    },
+    {
+      "item": "minecraft:writable_book"
+    }
+  ]
+}

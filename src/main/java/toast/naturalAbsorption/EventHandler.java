@@ -1,5 +1,7 @@
 package toast.naturalAbsorption;
 
+import java.util.List;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.MobEffects;
@@ -8,13 +10,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.SoundEvent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
@@ -31,10 +30,6 @@ public class EventHandler {
         return !itemStack.isEmpty() && itemStack.getItem() == ModNaturalAbsorption.ABSORB_BOOK;
     }
 
-    public EventHandler() {
-        MinecraftForge.EVENT_BUS.register(this);
-    }
-
     /**
      * Called by ItemStack.getTooltip().
      * EntityPlayer entityPlayer = the player looking at the tooltip.
@@ -45,19 +40,21 @@ public class EventHandler {
      * @param event The event being triggered.
      */
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    public void onItemTooltip(ItemTooltipEvent event) {
-        if (EventHandler.isShieldItem(event.getItemStack())) {
+    public static void onItemTooltip(ItemTooltipEvent event) {
+    	EntityPlayer player = event.getEntityPlayer();
+        if (isShieldItem(event.getItemStack()) && player != null) {
+        	List<String> tooltip = event.getToolTip();
         	String loc = ModNaturalAbsorption.ABSORB_BOOK.getUnlocalizedName() + ".tooltip.";
         	String defaultColor = TextFormatting.GRAY.toString();
         	String gold = TextFormatting.YELLOW.toString();
 
-            boolean canUse = event.getEntityPlayer().experienceLevel >= Properties.get().UPGRADES.LEVEL_COST || event.getEntityPlayer().capabilities.isCreativeMode;
+            boolean canUse = player.experienceLevel >= Properties.get().UPGRADES.LEVEL_COST || player.capabilities.isCreativeMode;
             boolean tooExpensive = !canUse;
 
             ITextComponent text;
-            event.getToolTip().set(0, gold + event.getToolTip().get(0)); // Colors the name
+            tooltip.set(0, gold + event.getToolTip().get(0)); // Colors the name
 
-            NBTTagCompound shieldData = ShieldManager.getShieldData(event.getEntityPlayer());
+            NBTTagCompound shieldData = ShieldManager.getShieldData(player);
             float shieldCapacity = ShieldManager.getData(shieldData, ShieldManager.CAPACITY_TAG, Properties.get().GENERAL.STARTING_SHIELD);
 
             String[] shieldCap = {
@@ -68,19 +65,19 @@ public class EventHandler {
     			new StringBuilder(gold).append(shieldCap[0]).append(defaultColor)
     			.append(" / ").append(gold).append(shieldCap[1]).toString()
     		});
-        	event.getToolTip().add("");
-        	event.getToolTip().add(defaultColor + text.getUnformattedText());
+        	tooltip.add("");
+        	tooltip.add(defaultColor + text.getUnformattedText());
 
         	float gain = Properties.get().UPGRADES.ABSORPTION_GAIN;
         	if (gain > Properties.get().GENERAL.MAX_SHIELD - shieldCapacity) {
         		gain = Properties.get().GENERAL.MAX_SHIELD - shieldCapacity;
         	}
         	if (gain > 0.0F) {
-            	event.getToolTip().add("");
+        		tooltip.add("");
             	text = new TextComponentTranslation(loc + "gain", new Object[] { });
-            	event.getToolTip().add(defaultColor + text.getUnformattedText());
+            	tooltip.add(defaultColor + text.getUnformattedText());
             	text = new TextComponentTranslation(MobEffects.ABSORPTION.getName(), new Object[] { });
-            	event.getToolTip().add(new StringBuilder(TextFormatting.BLUE.toString())
+            	tooltip.add(new StringBuilder(TextFormatting.BLUE.toString())
             		.append(" +").append(Float.toString(gain)).append(" ").append(text.getUnformattedText()).toString());
         	}
         	else {
@@ -91,13 +88,13 @@ public class EventHandler {
             	if (gain <= 0.0F)
                 	event.getToolTip().add("");
             	text = new TextComponentTranslation(loc + "cost", new Object[] { Properties.get().UPGRADES.LEVEL_COST });
-            	event.getToolTip().add((tooExpensive ? TextFormatting.RED.toString() : defaultColor) + text.getUnformattedText());
+            	tooltip.add((tooExpensive ? TextFormatting.RED.toString() : defaultColor) + text.getUnformattedText());
             }
 
             if (canUse) {
                 text = new TextComponentTranslation(loc + "canuse", new Object[] { });
-                event.getToolTip().add("");
-            	event.getToolTip().add(defaultColor + text.getUnformattedText());
+                tooltip.add("");
+                tooltip.add(defaultColor + text.getUnformattedText());
             }
         }
     }
@@ -113,7 +110,7 @@ public class EventHandler {
      * @param event The event being triggered.
      */
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    public void beforeRenderGameOverlay(RenderGameOverlayEvent.Pre event) {
+    public static void beforeRenderGameOverlay(RenderGameOverlayEvent.Pre event) {
         if (Properties.get().ARMOR.REPLACE_ARMOR && Properties.get().ARMOR.HIDE_ARMOR_BAR && event.getType() == RenderGameOverlayEvent.ElementType.ARMOR) {
             event.setCanceled(true);
         }
@@ -129,7 +126,7 @@ public class EventHandler {
      * @param event The event being triggered.
      */
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    public void onPlayerInteract(PlayerInteractEvent.RightClickItem event) {
+    public static void onPlayerInteract(PlayerInteractEvent.RightClickItem event) {
     	EntityPlayer player = event.getEntityPlayer();
         ItemStack held = player.getHeldItemMainhand();
         if (!held.isEmpty() && EventHandler.isShieldItem(held)) {
@@ -192,7 +189,7 @@ public class EventHandler {
      * @param event The event being triggered.
      */
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    public void onEntityJoinWorld(EntityJoinWorldEvent event) {
+    public static void onEntityJoinWorld(EntityJoinWorldEvent event) {
         if (event.getEntity() instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer) event.getEntity();
             NBTTagCompound shieldData = ShieldManager.getShieldData(player);
@@ -220,7 +217,7 @@ public class EventHandler {
      * @param event The event being triggered.
      */
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    public void onLivingDeath(LivingDeathEvent event) {
+    public static void onLivingDeath(LivingDeathEvent event) {
         if (event.getEntityLiving() instanceof EntityPlayer) {
             NBTTagCompound shieldData = ShieldManager.getShieldData((EntityPlayer) event.getEntityLiving());
             if (Properties.get().GENERAL.DEATH_PENALTY > 0.0F) {
@@ -248,7 +245,7 @@ public class EventHandler {
      * @param event The event being triggered.
      */
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onLivingHurt(LivingHurtEvent event) {
+    public static void onLivingHurt(LivingHurtEvent event) {
         if (event.getEntityLiving() instanceof EntityPlayer) {
         	EntityPlayer player = (EntityPlayer) event.getEntityLiving();
             if (Properties.get().RECOVERY.DELAY >= 0) {
@@ -259,17 +256,17 @@ public class EventHandler {
                 if (!event.getSource().isUnblockable()) {
                     ShieldManager.modifySource(event.getSource());
                     if ("VANILLA".equalsIgnoreCase(Properties.get().ARMOR.DURABILITY_TRIGGER))
-                    	this.damageArmor(event);
+                    	damageArmor(event);
                 }
 
                 if ("HITS".equalsIgnoreCase(Properties.get().ARMOR.DURABILITY_TRIGGER)) {
                 	if (event.getSource() == DamageSource.IN_WALL || event.getSource() == DamageSource.STARVE || event.getSource() == DamageSource.DROWN
                 		|| event.getSource() == DamageSource.MAGIC && event.getAmount() <= 1.0F || event.getSource() == DamageSource.WITHER
                 		|| event.getSource() == DamageSource.ON_FIRE || event.getSource() == DamageSource.LAVA)
-                    	this.damageArmor(event);
+                    	damageArmor(event);
                 }
                 else if ("ALL".equalsIgnoreCase(Properties.get().ARMOR.DURABILITY_TRIGGER))
-                	this.damageArmor(event);
+                	damageArmor(event);
             }
         }
         else if (Properties.get().ARMOR.REPLACE_ARMOR && ShieldManager.isSourceModified(event.getSource())) {
@@ -277,7 +274,7 @@ public class EventHandler {
         }
     }
 
-    private void damageArmor(LivingHurtEvent event) {
+    private static void damageArmor(LivingHurtEvent event) {
     	EntityPlayer player = (EntityPlayer) event.getEntityLiving();
     	float durabilityDamage = event.getAmount();
     	if (Properties.get().ARMOR.FRIENDLY_DURABILITY && durabilityDamage > player.getAbsorptionAmount()) {

@@ -5,23 +5,24 @@ import java.util.Random;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnumEnchantmentType;
-import net.minecraft.init.Items;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import toast.naturalAbsorption.network.MessageSyncShield;
 
 @Mod(modid = ModNaturalAbsorption.MODID, name = "Natural Absorption", version = ModNaturalAbsorption.VERSION)
+@Mod.EventBusSubscriber
 public class ModNaturalAbsorption {
 	/* TO DO *\
 	 * Way to see current and max shield caps
@@ -58,100 +59,65 @@ public class ModNaturalAbsorption {
             ModNaturalAbsorption.CHANNEL.registerMessage(MessageSyncShield.Handler.class, MessageSyncShield.class, id++, Side.CLIENT);
         }
 
-		ModNaturalAbsorption.ABSORB_BOOK = GameRegistry.register(new Item().setRegistryName(ModNaturalAbsorption.MODID, "absorption_book")
-			.setUnlocalizedName("absorption_book").setCreativeTab(CreativeTabs.MISC).setMaxStackSize(1));
+		ModNaturalAbsorption.proxy.preInit();
+	}
+
+	@SubscribeEvent
+	public static void registerItems(RegistryEvent.Register<Item> event) {
+		ModNaturalAbsorption.log("Test");
+		ABSORB_BOOK = new Item()
+				.setRegistryName(ModNaturalAbsorption.MODID, "absorption_book")
+				.setUnlocalizedName("absorption_book")
+				.setCreativeTab(CreativeTabs.MISC)
+				.setMaxStackSize(1);
+
+		event.getRegistry().register(ABSORB_BOOK);
+	}
+
+	// Registers the enchantments in this mod.
+	@SubscribeEvent
+	public static void registerEnchantment(RegistryEvent.Register<Enchantment> event) {
+		if (Properties.get().ENCHANT.ENABLE) {
+
+			Enchantment.Rarity rarity;
+			String rarityString = Properties.get().ENCHANT.RARITY.toLowerCase();
+			switch(rarityString) {
+				case "common":    rarity = Enchantment.Rarity.COMMON; break;
+				case "uncommon":  rarity = Enchantment.Rarity.UNCOMMON; break;
+				case "rare":      rarity = Enchantment.Rarity.RARE; break;
+				case "very_rare": rarity = Enchantment.Rarity.VERY_RARE; break;
+				default:
+					ModNaturalAbsorption.logWarning("Unrecognized enchantment rarity (" + rarityString + "). Defaulting to RARE.");
+					rarity = Enchantment.Rarity.RARE;
+			}
+
+			EnumEnchantmentType type;
+			String typeString = Properties.get().ENCHANT.SLOT.toLowerCase();
+			switch(typeString) {
+				case "any": type = EnumEnchantmentType.ARMOR; break;
+				case "head": type = EnumEnchantmentType.ARMOR_HEAD; break;
+				case "chest": type = EnumEnchantmentType.ARMOR_CHEST; break;
+				case "legs": type = EnumEnchantmentType.ARMOR_LEGS; break;
+				case "feet": type = EnumEnchantmentType.ARMOR_FEET; break;
+				default:
+					ModNaturalAbsorption.logWarning("Unrecognized enchantment slot (" + typeString + "). Defaulting to ANY.");
+					type = EnumEnchantmentType.ARMOR;
+			}
+
+			EntityEquipmentSlot[] allArmorSlots = { EntityEquipmentSlot.HEAD, EntityEquipmentSlot.CHEST, EntityEquipmentSlot.LEGS, EntityEquipmentSlot.FEET };
+			ABSORB_ENCHANT = new EnchantmentAbsorption(rarity, type, allArmorSlots)
+					.setRegistryName(new ResourceLocation(ModNaturalAbsorption.MODID, "absorption"));
+			event.getRegistry().register(ModNaturalAbsorption.ABSORB_ENCHANT);
+		}
 	}
 
 	// Called during initialization. Registers entities, mob spawns, and renderers.
 	@Mod.EventHandler
 	public void init(FMLInitializationEvent event) {
-		this.registerEnchantments();
-
-		new ShieldManager();
-		new EventHandler();
-
-		this.registerRecipes();
-		ModNaturalAbsorption.proxy.registerRenderers();
-	}
-
-	// Registers the enchantments in this mod.
-	private void registerEnchantments() {
-		if (Properties.get().ENCHANT.ENABLE) {
-			final Enchantment.Rarity rarity;
-			if ("COMMON".equalsIgnoreCase(Properties.get().ENCHANT.RARITY)) {
-				rarity = Enchantment.Rarity.COMMON;
-			}
-			else if ("UNCOMMON".equalsIgnoreCase(Properties.get().ENCHANT.RARITY)) {
-				rarity = Enchantment.Rarity.UNCOMMON;
-			}
-			else if ("RARE".equalsIgnoreCase(Properties.get().ENCHANT.RARITY)) {
-				rarity = Enchantment.Rarity.RARE;
-			}
-			else if ("VERY_RARE".equalsIgnoreCase(Properties.get().ENCHANT.RARITY)) {
-				rarity = Enchantment.Rarity.VERY_RARE;
-			}
-			else {
-				ModNaturalAbsorption.logWarning("Unrecognized enchantment rarity (" + Properties.get().ENCHANT.RARITY + "). Defaulting to RARE.");
-				rarity = Enchantment.Rarity.RARE;
-			}
-
-			final EnumEnchantmentType type;
-			if ("ANY".equalsIgnoreCase(Properties.get().ENCHANT.SLOT)) {
-				type = EnumEnchantmentType.ARMOR;
-			}
-			else if ("HEAD".equalsIgnoreCase(Properties.get().ENCHANT.SLOT)) {
-				type = EnumEnchantmentType.ARMOR_HEAD;
-			}
-			else if ("CHEST".equalsIgnoreCase(Properties.get().ENCHANT.SLOT)) {
-				type = EnumEnchantmentType.ARMOR_CHEST;
-			}
-			else if ("LEGS".equalsIgnoreCase(Properties.get().ENCHANT.SLOT)) {
-				type = EnumEnchantmentType.ARMOR_LEGS;
-			}
-			else if ("FEET".equalsIgnoreCase(Properties.get().ENCHANT.SLOT)) {
-				type = EnumEnchantmentType.ARMOR_FEET;
-			}
-			else {
-				ModNaturalAbsorption.logWarning("Unrecognized enchantment slot (" + Properties.get().ENCHANT.SLOT + "). Defaulting to ANY.");
-				type = EnumEnchantmentType.ARMOR;
-			}
-
-			EntityEquipmentSlot[] allArmorSlots = { EntityEquipmentSlot.HEAD, EntityEquipmentSlot.CHEST, EntityEquipmentSlot.LEGS, EntityEquipmentSlot.FEET };
-			ModNaturalAbsorption.ABSORB_ENCHANT = new EnchantmentAbsorption(rarity, type, allArmorSlots);
-			GameRegistry.register(ModNaturalAbsorption.ABSORB_ENCHANT, new ResourceLocation(ModNaturalAbsorption.MODID, "absorption"));
-		}
-	}
-
-	// Registers the crafting and smelting recipes in this mod.
-	private void registerRecipes() {
-		if (Properties.get().UPGRADES.RECIPE > 0 && Properties.get().UPGRADES.RECIPE <= 3) {
-			Item recipeItem = Item.getByNameOrId(Properties.get().UPGRADES.RECIPE_ITEM);
-			if (recipeItem != null) {
-				// Output
-				ItemStack absorptionBook = new ItemStack(ModNaturalAbsorption.ABSORB_BOOK);
-				// Input
-				ItemStack item = new ItemStack(recipeItem, 1, Properties.get().UPGRADES.RECIPE_ITEM_DAMAGE);
-				ItemStack book = Properties.get().UPGRADES.RECIPE_ALT ? new ItemStack(Items.WRITABLE_BOOK) : new ItemStack(Items.BOOK);
-
-				switch (Properties.get().UPGRADES.RECIPE) {
-					case 1:
-						GameRegistry.addShapelessRecipe(absorptionBook, new Object[] { book, item });
-						break;
-					case 2:
-						GameRegistry.addRecipe(absorptionBook, new Object[] {
-							" $ ",
-							"$#$",
-							" $ ", Character.valueOf('#'), book, Character.valueOf('$'), item });
-						break;
-					case 3:
-						GameRegistry.addRecipe(absorptionBook, new Object[] {
-							"$$$",
-							"$#$",
-							"$$$", Character.valueOf('#'), book, Character.valueOf('$'), item });
-						break;
-				}
-			}
-		}
+        if (Properties.get().RECOVERY.DELAY >= 0) {
+            MinecraftForge.EVENT_BUS.register(ShieldManager.class);
+        }
+        MinecraftForge.EVENT_BUS.register(EventHandler.class);
 	}
 
 	public static boolean debug() {

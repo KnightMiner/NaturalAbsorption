@@ -21,7 +21,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 import toast.naturalAbsorption.network.MessageSyncShield;
 
-@Mod(modid = ModNaturalAbsorption.MODID, name = "Natural Absorption", version = ModNaturalAbsorption.VERSION)
+@Mod(modid = ModNaturalAbsorption.MODID, name = "Unnatural Absorption", version = ModNaturalAbsorption.VERSION)
 @Mod.EventBusSubscriber
 public class ModNaturalAbsorption {
 	/* TO DO *\

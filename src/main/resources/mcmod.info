@@ -1,13 +1,13 @@
 [
 {
   "modid": "natural_absorption",
-  "name": "Natural Absorption",
+  "name": "Unnatural Absorption",
   "description": "Provides the player with a regenerating shield, intended for play with no health regen (or very slow regen). Also can be configured to replace armor's damage reduction with absorption.",
   "version": "${version}",
   "mcversion": "${mcversion}",
-  "url": "http://www.minecraftforum.net/topic/1153874-/",
+  "url": "https://minecraft.curseforge.com/projects/unnatural-absorption",
   "updateUrl": "",
-  "authorList": ["FatherToast"],
+  "authorList": ["KnightMiner", "FatherToast"],
   "credits": "",
   "logoFile": "",
   "screenshots": [],

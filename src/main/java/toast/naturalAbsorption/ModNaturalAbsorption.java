@@ -64,7 +64,6 @@ public class ModNaturalAbsorption {
 
 	@SubscribeEvent
 	public static void registerItems(RegistryEvent.Register<Item> event) {
-		ModNaturalAbsorption.log("Test");
 		ABSORB_BOOK = new Item()
 				.setRegistryName(ModNaturalAbsorption.MODID, "absorption_book")
 				.setUnlocalizedName("absorption_book")
